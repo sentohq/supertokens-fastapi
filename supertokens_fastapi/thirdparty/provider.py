@@ -14,18 +14,25 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-from . import exceptions
-from .supertokens import Supertokens
-from fastapi import FastAPI
-from . import session
-from . import emailpassword
-from . import thirdparty
-from . import thirdpartyemailpassword
+from __future__ import annotations
+import abc
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .types import UserInfo, AccessTokenAPI, AuthorisationRedirectAPI
 
 
-def init(app: FastAPI, config):
-    return Supertokens.init(app, config)
+class Provider(abc.ABC):
+    def __init__(self, provider_id: str):
+        self.id = provider_id
 
+    @abc.abstractmethod
+    async def get_profile_info(self, auth_code_response: any) -> UserInfo:
+        pass
 
-def get_all_cors_headers():
-    return Supertokens.get_instance().get_all_cors_headers()
+    @abc.abstractmethod
+    def get_authorisation_redirect_api_info(self) -> AuthorisationRedirectAPI:
+        pass
+
+    @abc.abstractmethod
+    def get_access_token_api_info(self, redirect_uri: str, auth_code_from_request: str) -> AccessTokenAPI:
+        pass

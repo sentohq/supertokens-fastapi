@@ -26,11 +26,10 @@ from .exceptions import SuperTokensError
 
 
 class RecipeModule(abc.ABC):
-    def __init__(self, recipe_id: str, app_info: AppInfo, is_in_serverless_env: bool,
+    def __init__(self, recipe_id: str, app_info: AppInfo,
                  rid_to_core: Union[str, None] = None):
         self.recipe_id = recipe_id
         self.app_info = app_info
-        self.is_in_serverless_env = is_in_serverless_env
         self.rid_to_core = rid_to_core
         self.querier = None
 
@@ -40,12 +39,9 @@ class RecipeModule(abc.ABC):
     def get_app_info(self):
         return self.app_info
 
-    def check_if_in_serverless_env(self):
-        return self.is_in_serverless_env
-
     def get_querier(self):
         if self.querier is None:
-            self.querier = Querier.get_instance(self.is_in_serverless_env, self, self.rid_to_core)
+            self.querier = Querier.get_instance(self, self.rid_to_core)
         return self.querier
 
     def return_api_id_if_can_handle_request(self, path: NormalisedURLPath, method: str) -> Union[str, None]:

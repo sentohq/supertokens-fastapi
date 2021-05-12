@@ -47,12 +47,12 @@ class EmailVerificationRecipe(RecipeModule):
     recipe_id = 'emailverification'
     __instance = None
 
-    def __init__(self, recipe_id: str, app_info: AppInfo, is_in_serverless_env: bool, config):
-        super().__init__(recipe_id, app_info, is_in_serverless_env)
+    def __init__(self, recipe_id: str, app_info: AppInfo, config, rid_to_core=None):
+        super().__init__(recipe_id, app_info, rid_to_core)
         self.config = validate_and_normalise_user_input(app_info, config)
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
-        return isinstance(err, SuperTokensError) and err.get_recipe_id() == self.get_recipe_id()
+        return isinstance(err, SuperTokensError) and err.recipe == self
 
     def get_apis_handled(self) -> List[APIHandled]:
         return [
@@ -81,9 +81,9 @@ class EmailVerificationRecipe(RecipeModule):
 
     @staticmethod
     def init(config=None):
-        def func(app_info: AppInfo, is_in_serverless_env):
+        def func(app_info: AppInfo):
             if EmailVerificationRecipe.__instance is None:
-                EmailVerificationRecipe.__instance = EmailVerificationRecipe(EmailVerificationRecipe.recipe_id, app_info, is_in_serverless_env, config)
+                EmailVerificationRecipe.__instance = EmailVerificationRecipe(EmailVerificationRecipe.recipe_id, app_info, config)
                 return EmailVerificationRecipe.__instance
             else:
                 raise_general_exception(None, 'Emailverification recipe has already been initialised. Please check '

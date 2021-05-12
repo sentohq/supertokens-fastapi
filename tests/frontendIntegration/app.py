@@ -17,9 +17,10 @@ under the License.
 import sys
 
 sys.path.append('../..')  # noqa: E402
-from supertokens_fastapi import init, get_all_cors_headers, session, emailpassword, middleware
+from supertokens_fastapi import init, get_all_cors_headers, session, emailpassword
+from supertokens_fastapi.session import Session
 from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, PlainTextResponse
 from starlette.exceptions import ExceptionMiddleware
 
@@ -27,7 +28,7 @@ index_file = open("./templates/index.html", "r")
 file_contents = index_file.read()
 index_file.close()
 
-app = FastAPI()
+app = FastAPI(debug=False)
 
 init(app, {
     'supertokens': {
@@ -39,20 +40,10 @@ init(app, {
         'website_domain': "http://localhost:8888",
         'api_base_path': "/auth"
     },
-    'recipe_list': [emailpassword.init(), session.init()]
+    'recipe_list': [emailpassword.init(), session.init()],
+    'telemetry': False
 })
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8888"
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Content-Type"] + get_all_cors_headers(),
-)
-
-app.add_middleware(middleware())
 app.add_middleware(ExceptionMiddleware, handlers=app.exception_handlers)
 
 
@@ -62,9 +53,13 @@ def send_file():
 
 
 @app.get('/user')
-async def get_user(user_session=Depends(session.verify_session())):
+async def get_user(user_session: Session = Depends(session.verify_session())):
     print(user_session.get_user_id())
-    return JSONResponse({})
+    return JSONResponse({
+        'userId': user_session.get_user_id(),
+        'sessionHandle': user_session.get_handle(),
+        'jwtPayload': user_session.get_jwt_payload()
+    })
 
 
 @app.exception_handler(405)
@@ -74,4 +69,22 @@ def f_405(_, e):
 
 @app.exception_handler(Exception)
 def f_500(_, e):
-    return JSONResponse(status_code=500, content={})
+    print(str(e))
+    return JSONResponse(status_code=500, content={
+        'e': e
+    })
+
+
+# cors middleware added like this due to issue with add_middleware
+# ref: https://github.com/tiangolo/fastapi/issues/1663
+
+
+app = CORSMiddleware(
+    app=app,
+    allow_origins=[
+        "http://localhost:8888"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type"] + get_all_cors_headers(),
+)

@@ -45,7 +45,7 @@ class Querier:
     __last_tried_index: int = 0
     __hosts_alive_for_testing = set()
 
-    def __init__(self, hosts: list, is_in_serverless_env: bool, recipe: Union[RecipeModule, None], rid_to_core=None):
+    def __init__(self, hosts: list, recipe: Union[RecipeModule, None], rid_to_core=None):
         self.__hosts = hosts
         self.__recipe = recipe
         self.__rid_to_core = None
@@ -53,7 +53,6 @@ class Querier:
             self.__rid_to_core = rid_to_core
         elif self.__recipe is not None:
             self.__rid_to_core = self.__recipe.get_recipe_id()
-        self.__is_in_serverless_env = is_in_serverless_env
 
     @staticmethod
     def reset():
@@ -82,7 +81,8 @@ class Querier:
                 headers = {
                     API_KEY_HEADER: Querier.__api_key
                 }
-            return await AsyncClient().get(url, headers=headers)
+            async with AsyncClient() as client:
+                return await client.get(url, headers=headers)
 
         response = await self.__send_request_helper(
             NormalisedURLPath(self.__recipe, API_VERSION), 'GET', f, len(self.__hosts))
@@ -101,11 +101,11 @@ class Querier:
         return Querier.__api_version
 
     @staticmethod
-    def get_instance(is_in_serverless_env: bool, recipe, rid_to_core=None):
+    def get_instance(recipe, rid_to_core=None):
         if (not Querier.__init_called) or (Querier.__hosts is None):
             # TODO
             raise Exception("Please call the supertokens.init function before using SuperTokens")
-        return Querier(Querier.__hosts, is_in_serverless_env, recipe, rid_to_core)
+        return Querier(Querier.__hosts, recipe, rid_to_core)
 
     @staticmethod
     def init(hosts, api_key=None):
@@ -138,7 +138,8 @@ class Querier:
             params = {}
 
         async def f(url):
-            return await AsyncClient().get(url, params=params, headers=await self.__get_headers_with_api_version(path))
+            async with AsyncClient() as client:
+                return await client.get(url, params=params, headers=await self.__get_headers_with_api_version(path))
 
         return await self.__send_request_helper(path, 'GET', f, len(self.__hosts))
 
@@ -151,14 +152,16 @@ class Querier:
             return data
 
         async def f(url):
-            return await AsyncClient().post(url, json=data, headers=await self.__get_headers_with_api_version(path))
+            async with AsyncClient() as client:
+                return await client.post(url, json=data, headers=await self.__get_headers_with_api_version(path))
 
         return await self.__send_request_helper(path, 'POST', f, len(self.__hosts))
 
     async def send_delete_request(self, path: NormalisedURLPath):
 
         async def f(url):
-            return await AsyncClient().delete(url, headers=await self.__get_headers_with_api_version(path))
+            async with AsyncClient() as client:
+                return await client.delete(url, headers=await self.__get_headers_with_api_version(path))
 
         return await self.__send_request_helper(path, 'DELETE', f, len(self.__hosts))
 
@@ -167,7 +170,8 @@ class Querier:
             data = {}
 
         async def f(url):
-            return await AsyncClient().put(url, json=data, headers=await self.__get_headers_with_api_version(path))
+            async with AsyncClient() as client:
+                return await client.put(url, json=data, headers=await self.__get_headers_with_api_version(path))
 
         return await self.__send_request_helper(path, 'PUT', f, len(self.__hosts))
 

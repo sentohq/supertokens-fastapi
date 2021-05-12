@@ -13,19 +13,6 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-
-from . import exceptions
-from .supertokens import Supertokens
-from fastapi import FastAPI
-from . import session
-from . import emailpassword
-from . import thirdparty
-from . import thirdpartyemailpassword
-
-
-def init(app: FastAPI, config):
-    return Supertokens.init(app, config)
-
-
-def get_all_cors_headers():
-    return Supertokens.get_instance().get_all_cors_headers()
+from .signinup import handle_sign_in_up_api
+from .signout import handle_sign_out_api
+from .authorisation_url import handle_authorisation_url_api

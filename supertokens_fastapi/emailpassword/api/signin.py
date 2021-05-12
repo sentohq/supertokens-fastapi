@@ -52,13 +52,13 @@ async def handle_sign_in_api(recipe: EmailPasswordRecipe, request: Request):
     except Exception as e:
         raise_general_exception(recipe, e)
 
-    await create_new_session(request, user.id, jwt_payload, session_data)
+    await create_new_session(request, user.user_id, jwt_payload, session_data)
 
     return JSONResponse({
         'status': 'OK',
         'user': {
-            'id': user.id,
+            'id': user.user_id,
             'email': user.email,
-            'timeJoined': user.timeJoined
+            'timeJoined': user.time_joined
         }
     })

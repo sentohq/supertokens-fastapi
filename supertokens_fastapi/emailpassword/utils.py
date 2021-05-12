@@ -81,11 +81,11 @@ async def default_email_validator(value) -> Union[str, None]:
     return None
 
 
-async def default_set_session_data_for_session(_: User, __: List[FormField], ___: Literal['signing', 'signup']):
+async def default_set_session_data_for_session(_: User, __: List[FormField], ___: Literal['signin', 'signup']):
     return {}
 
 
-async def default_set_jwt_payload_for_session(_: User, __: List[FormField], ___: Literal['signing', 'signup']):
+async def default_set_jwt_payload_for_session(_: User, __: List[FormField], ___: Literal['signin', 'signup']):
     return {}
 
 
@@ -116,8 +116,8 @@ def default_create_and_send_custom_email(app_info: AppInfo) -> Callable[[User, s
 
 
 class SessionFeature:
-    def __init__(self, set_jwt_payload: Callable[[User, List[FormField], Literal['signing', 'signup']], Awaitable[any]],
-                 set_session_data: Callable[[User, List[FormField], Literal['signing', 'signup']], Awaitable[any]]):
+    def __init__(self, set_jwt_payload: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]],
+                 set_session_data: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]]):
         self.set_jwt_payload = set_jwt_payload
         self.set_session_data = set_session_data
 
@@ -183,7 +183,7 @@ class SignInFeature:
 def normalise_sign_in_form_fields(form_fields: List[NormalisedFormField]) -> List[NormalisedFormField]:
     return list(map(
         lambda y: NormalisedFormField(y.id, y.validate if y.id == FORM_FIELD_EMAIL_ID else default_validator, False),
-        get_filtered_list(lambda x: x.id == FORM_FIELD_PASSWORD_ID or x.id == FORM_FIELD_PASSWORD_ID, form_fields)))
+        get_filtered_list(lambda x: x.id == FORM_FIELD_PASSWORD_ID or x.id == FORM_FIELD_EMAIL_ID, form_fields)))
 
 
 def validate_and_normalise_sign_in_config(sign_up_config: SignUpFeature, config=None) -> SignInFeature:

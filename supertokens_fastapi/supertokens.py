@@ -23,7 +23,8 @@ from .constants import (
     TELEMETRY_SUPERTOKENS_API_VERSION
 )
 from .session.cookie_and_header import clear_cookies, attach_access_token_to_cookie, \
-    attach_refresh_token_to_cookie, attach_id_refresh_token_to_cookie_and_header, attach_anti_csrf_header
+    attach_refresh_token_to_cookie, attach_id_refresh_token_to_cookie_and_header, attach_anti_csrf_header, \
+    set_front_token_in_headers
 from .utils import (
     validate_the_structure_of_user_input,
     normalise_http_method,
@@ -76,6 +77,13 @@ def manage_cookies_post_response(session: Session, response: Response):
                 access_token['token'],
                 access_token['expiry']
             )
+            set_front_token_in_headers(
+                recipe,
+                response,
+                session.get_user_id(),
+                access_token['expiry'],
+                session.get_jwt_payload()
+            )
         refresh_token = session.new_refresh_token_info
         if refresh_token is not None:
             attach_refresh_token_to_cookie(
@@ -113,10 +121,7 @@ class Supertokens:
         if 'recipe_list' not in config or not isinstance(config['recipe_list'], list) or len(config['recipe_list']) == 0:
             raise_general_exception(None, 'Please provide at least one recipe to the supertokens.init function call')
 
-        # TODO server-less
-
-        self.is_in_serverless_env = False if 'is_in_serverless_env' not in config else config['is_in_serverless_env']
-        self.recipe_modules: List[RecipeModule] = list(map(lambda func: func(self.app_info, self.is_in_serverless_env), config['recipe_list']))
+        self.recipe_modules: List[RecipeModule] = list(map(lambda func: func(self.app_info), config['recipe_list']))
 
         for recipe in self.recipe_modules:
             apis_handled = recipe.get_apis_handled()
@@ -124,17 +129,19 @@ class Supertokens:
             if len(stringified_apis_handled) != len(set(stringified_apis_handled)):
                 raise_general_exception(recipe, 'Duplicate APIs exposed from recipe. Please combine them into one API')
 
+        self.__set_error_handler(app)
+        app.add_middleware(Supertokens.__Middleware)
         telemetry = ('SUPERTOKENS_ENV' not in environ) or (environ['SUPERTOKENS_ENV'] != 'testing')
         if 'telemetry' in config:
             telemetry = config['telemetry']
 
         if telemetry:
+            print(telemetry)
             self.send_telemetry()
-        self.__set_error_handler(app)
 
     async def send_telemetry(self):
         try:
-            querier = Querier.get_instance(self.is_in_serverless_env, None)
+            querier = Querier.get_instance(None)
             response = await querier.send_get_request(NormalisedURLPath(None, TELEMETRY), {})
             telemetry_id = None
             if 'exists' in response and response['exists'] and 'telemetry_id' in response:
@@ -195,10 +202,6 @@ class Supertokens:
                 headers_set.add(header)
 
         return list(headers_set)
-
-    @staticmethod
-    def middleware():
-        return Supertokens.__Middleware
 
     class __Middleware(BaseHTTPMiddleware):
         def __init__(self, app: FastAPI):

@@ -13,19 +13,25 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-
-from . import exceptions
-from .supertokens import Supertokens
-from fastapi import FastAPI
-from . import session
-from . import emailpassword
-from . import thirdparty
-from . import thirdpartyemailpassword
+from __future__ import annotations
+from supertokens_fastapi.exceptions import SuperTokensError
 
 
-def init(app: FastAPI, config):
-    return Supertokens.init(app, config)
+def raise_no_email_given_by_provider_exception(recipe, msg):
+    if isinstance(msg, SuperTokensError):
+        raise msg
+    raise NoEmailGivenByProviderError(recipe, msg) from None
 
 
-def get_all_cors_headers():
-    return Supertokens.get_instance().get_all_cors_headers()
+def raise_unknown_user_id_exception(recipe, msg):
+    if isinstance(msg, SuperTokensError):
+        raise msg
+    raise UnknownUserIdError(recipe, msg) from None
+
+
+class UnknownUserIdError(SuperTokensError):
+    pass
+
+
+class NoEmailGivenByProviderError(SuperTokensError):
+    pass

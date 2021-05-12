@@ -13,7 +13,9 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-from typing import Callable, Union, Awaitable, List
+from typing import Callable, Union, List, Dict
+from fastapi.requests import Request
+from supertokens_fastapi.emailpassword.types import FormField
 
 type_string = {
     'type': 'string'
@@ -98,6 +100,10 @@ EMAIL_VERIFICATION_FEATURE_INPUT_SCHEMA = {
     'additionalProperties': False
 }
 
+PROVIDERS_INPUT_SCHEMA = {
+    'type': 'array'
+}
+
 INPUT_SCHEMA = {
     'type': 'object',
     'properties': {
@@ -106,18 +112,50 @@ INPUT_SCHEMA = {
         'sign_in_feature': SIGN_IN_FEATURE_INPUT_SCHEMA,
         'sign_out_feature': SIGN_OUT_FEATURE_INPUT_SCHEMA,
         'reset_token_using_password_feature': RESET_PASSWORD_USING_TOKEN_FEATURE_INPUT_SCHEMA,
-        'email_verification_feature': EMAIL_VERIFICATION_FEATURE_INPUT_SCHEMA
+        'email_verification_feature': EMAIL_VERIFICATION_FEATURE_INPUT_SCHEMA,
+        'providers': PROVIDERS_INPUT_SCHEMA
     },
     'additionalProperties': False
 }
 
 
+class ThirdPartyInfo:
+    def __init__(self, third_party_user_id: str, third_party_id: str):
+        self.user_id = third_party_user_id
+        self.id = third_party_id
+
+
 class User:
-    def __init__(self, user_id: str, email: str, time_joined: int):
+    def __init__(self, user_id: str, email: str, time_joined: int, third_party_info: Union[ThirdPartyInfo, None] = None):
         self.user_id = user_id
         self.email = email
         self.time_joined = time_joined
-        self.third_party_info = None
+        self.third_party_info = third_party_info
+
+
+class UserInfo:
+    def __init__(self, user_id: str, email: Union[str, None] = None, email_verified: [bool, None] = None):
+        self.user_id = user_id
+        self.email = email
+        self.email_verified = email_verified
+
+
+class AccessTokenAPI:
+    def __init__(self, url: str, params: Dict[str, str]):
+        self.url = url
+        self.params = params
+
+
+class AuthorisationRedirectAPI:
+    def __init__(self, url: str, params: Dict[str, Union[str, Callable[[Request], str]]]):
+        self.url = url
+        self.params = params
+
+
+class SignInUpResponse:
+    def __init__(self, user: User, is_new_user: bool):
+        self.user = user
+        self.is_new_user = is_new_user
 
 
 class UsersResponse:
@@ -126,20 +164,27 @@ class UsersResponse:
         self.next_pagination_token = next_pagination_token
 
 
-class ErrorFormField:
-    def __init__(self, id: str, error: str):
-        self.id = id
-        self.error = error
+class EmailPasswordSignInContext:
+    def __init__(self):
+        pass
 
 
-class FormField:
-    def __init__(self, id: str, value: any):
-        self.id = id
-        self.value = value
+class EmailPasswordSignUpContext:
+    def __init__(self, form_fields: List[FormField]):
+        self.form_fields = form_fields
 
 
-class NormalisedFormField:
-    def __init__(self, id: str, validate: Callable[[str], Awaitable[Union[str, None]]], optional: bool):
-        self.id = id
-        self.validate = validate
-        self.optional = optional
+class EmailPasswordSessionDataAndJWTContext:
+    def __init__(self, form_fields: List[FormField]):
+        self.form_fields = form_fields
+
+
+class ThirdPartyContext:
+    def __init__(self, third_party_auth_code_response: any):
+        self.third_party_auth_code_response = third_party_auth_code_response
+
+
+class NextPaginationToken:
+    def __init__(self, third_party_pagination_token: Union[str, None], email_password_pagination_token: Union[str, None]):
+        self.third_party_pagination_token = third_party_pagination_token
+        self.email_password_pagination_token = email_password_pagination_token

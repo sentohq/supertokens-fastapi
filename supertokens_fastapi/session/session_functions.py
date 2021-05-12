@@ -89,16 +89,15 @@ async def get_session(recipe: SessionRecipe, access_token: str, anti_csrf_token:
                         'userDataInJWT': access_token_info['userData']
                     }
                 }
-    except TryRefreshTokenError:
-        pass
-    except Exception as e:
+    except TryRefreshTokenError as e:
         if not fallback_to_core:
             raise e
 
     ProcessState.get_instance().add_state(AllowedProcessStates.CALLING_SERVICE_IN_VERIFY)
     data = {
         'accessToken': access_token,
-        'doAntiCsrfCheck': do_anti_csrf_check
+        'doAntiCsrfCheck': do_anti_csrf_check,
+        'enableAntiCsrf': handshake_info.anti_csrf == "VIA_TOKEN"
     }
     if anti_csrf_token is not None:
         data['antiCsrfToken'] = anti_csrf_token

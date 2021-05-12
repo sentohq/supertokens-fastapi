@@ -58,8 +58,8 @@ async def handle_sign_up_api(recipe: EmailPasswordRecipe, request: Request):
     return JSONResponse({
         'status': 'OK',
         'user': {
-            'id': user.id,
+            'id': user.user_id,
             'email': user.email,
-            'timeJoined': user.timeJoined
+            'timeJoined': user.time_joined
         }
     })

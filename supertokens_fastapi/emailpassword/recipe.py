@@ -65,16 +65,15 @@ class EmailPasswordRecipe(RecipeModule):
     recipe_id = 'emailpassword'
     __instance = None
 
-    def __init__(self, recipe_id: str, app_info: AppInfo, is_in_serverless_env: bool,
-                 config=None):
-        super().__init__(recipe_id, app_info, is_in_serverless_env)
+    def __init__(self, recipe_id: str, app_info: AppInfo, config=None, rid_to_core=None):
+        super().__init__(recipe_id, app_info, rid_to_core)
         if config is None:
             config = {}
         self.config = validate_and_normalise_user_input(self, app_info, config)
-        self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info, is_in_serverless_env, self.config.email_verification_feature)
+        self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info, self.config.email_verification_feature)
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
-        return isinstance(err, SuperTokensError) and err.get_recipe_id() == self.get_recipe_id()
+        return isinstance(err, SuperTokensError) and err.recipe == self
 
     def get_apis_handled(self) -> List[APIHandled]:
         return [
@@ -143,10 +142,10 @@ class EmailPasswordRecipe(RecipeModule):
 
     @staticmethod
     def init(config=None):
-        def func(app_info: AppInfo, is_in_serverless_env):
+        def func(app_info: AppInfo):
             if EmailPasswordRecipe.__instance is None:
                 EmailPasswordRecipe.__instance = EmailPasswordRecipe(EmailPasswordRecipe.recipe_id, app_info,
-                                                                     is_in_serverless_env, config)
+                                                                     config)
                 return EmailPasswordRecipe.__instance
             else:
                 raise_general_exception(None, 'Emailpassword recipe has already been initialised. Please check your '
@@ -172,7 +171,7 @@ class EmailPasswordRecipe(RecipeModule):
     async def get_email_for_user_id(self, user_id: str) -> str:
         user_info = await self.get_user_by_id(user_id)
         if user_info is None:
-            raise_unknown_user_id_exception('Unknown User ID provided')
+            raise_unknown_user_id_exception(self, 'Unknown User ID provided')
         return user_info.email
 
     async def get_user_by_id(self, user_id: str) -> User:

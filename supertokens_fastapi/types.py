@@ -51,8 +51,7 @@ INPUT_SCHEMA = {
         'recipe_list': {
             'type': 'array'
         },
-        'telemetry': type_boolean,
-        'is_in_serverless_env': type_boolean
+        'telemetry': type_boolean
     },
     'required': ['supertokens', 'app_info', 'recipe_list'],
     'additional_properties': False

@@ -67,9 +67,9 @@ class SessionRecipe(RecipeModule):
     recipe_id = 'session'
     __instance = None
 
-    def __init__(self, recipe_id: str, app_info: AppInfo, is_in_serverless_env: bool,
+    def __init__(self, recipe_id: str, app_info: AppInfo,
                  config=None):
-        super().__init__(recipe_id, app_info, is_in_serverless_env)
+        super().__init__(recipe_id, app_info)
         if config is None:
             config = {}
         self.config = validate_and_normalise_user_input(self, app_info, config)
@@ -82,7 +82,7 @@ class SessionRecipe(RecipeModule):
             pass
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
-        return isinstance(err, SuperTokensError) and err.get_recipe_id() == self.get_recipe_id()
+        return isinstance(err, SuperTokensError) and err.recipe == self
 
     def get_apis_handled(self) -> List[APIHandled]:
         return [
@@ -111,9 +111,9 @@ class SessionRecipe(RecipeModule):
 
     @staticmethod
     def init(config=None):
-        def func(app_info: AppInfo, is_in_serverless_env):
+        def func(app_info: AppInfo):
             if SessionRecipe.__instance is None:
-                SessionRecipe.__instance = SessionRecipe(SessionRecipe.recipe_id, app_info, is_in_serverless_env, config)
+                SessionRecipe.__instance = SessionRecipe(SessionRecipe.recipe_id, app_info, config)
                 return SessionRecipe.__instance
             else:
                 raise_general_exception(None, 'Session recipe has already been initialised. Please check your code for bugs.')
@@ -137,7 +137,7 @@ class SessionRecipe(RecipeModule):
     async def get_handshake_info(self) -> HandshakeInfo:
         if self.handshake_info is None:
             ProcessState.get_instance().add_state(AllowedProcessStates.CALLING_SERVICE_IN_GET_HANDSHAKE_INFO)
-            response = await self.get_querier().send_post_request(RECIPE_HANDSHAKE, {})
+            response = await self.get_querier().send_post_request(NormalisedURLPath(self, RECIPE_HANDSHAKE), {})
             self.handshake_info = HandshakeInfo({
                 **response,
                 'antiCsrf': self.config.anti_csrf
