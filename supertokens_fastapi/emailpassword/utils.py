@@ -337,7 +337,7 @@ def validate_and_normalise_user_input(recipe: EmailPasswordRecipe, app_info: App
     reset_token_using_password_feature = validate_and_normalise_reset_password_using_token_config(
         app_info,
         sign_up_feature,
-        config['reset_token_using_password_feature'] if 'reset_token_using_password_feature' in config else None)
+        config['reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else None)
     email_verification_feature = validate_and_normalise_email_verification_config(
         recipe,
         config['email_verification_feature'] if 'email_verification_feature' in config else None)

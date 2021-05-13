@@ -61,7 +61,7 @@ class ThirdPartyRecipe(RecipeModule):
         self.config = validate_and_normalise_user_input(self, config)
         self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info,
                                                                  self.config.email_verification_feature)
-        self.providers = []
+        self.providers = self.config.sign_in_and_up_feature.providers
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
         return isinstance(err, SuperTokensError) and err.recipe == self

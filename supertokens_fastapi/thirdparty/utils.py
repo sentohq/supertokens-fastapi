@@ -161,10 +161,11 @@ class ThirdPartyConfig:
 
 
 def validate_and_normalise_user_input(recipe: ThirdPartyRecipe, config) -> ThirdPartyConfig:
-    validate_the_structure_of_user_input(config, INPUT_SCHEMA, 'emailpassword recipe', recipe)
+    validate_the_structure_of_user_input(config, INPUT_SCHEMA, 'thirdparty recipe', recipe)
     session_feature = validate_and_normalise_session_feature_config(
         config['session_feature'] if 'session_feature' in config else None)
     sign_in_and_up_feature = validate_and_normalise_sign_in_and_up_config(
+        recipe,
         config['sign_in_and_up_feature'] if 'sign_in_and_up_feature' in config else None)
     sign_out_feature = validate_and_normalise_sign_out_config(
         config['sign_out_feature'] if 'sign_out_feature' in config else None)

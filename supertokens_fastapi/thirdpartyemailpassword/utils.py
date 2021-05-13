@@ -26,13 +26,11 @@ from .types import (
 from typing import List, Literal, Callable, Awaitable, TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from .recipe import ThirdPartyEmailPasswordRecipe
-    from supertokens_fastapi.emailpassword.types import NormalisedFormField
 from supertokens_fastapi.utils import validate_the_structure_of_user_input
 from .exceptions import (
     raise_unknown_user_id_exception,
     raise_invalid_pagination_token_exception
 )
-from supertokens_fastapi.emailpassword.utils import normalise_sign_up_form_fields
 from base64 import b64encode, b64decode
 from supertokens_fastapi.emailpassword.types import UsersResponse
 
@@ -70,7 +68,7 @@ def validate_and_normalise_session_feature_config(config=None) -> SessionFeature
 
 
 class SignUpFeature:
-    def __init__(self, disable_default_implementation: bool, form_fields: List[NormalisedFormField],
+    def __init__(self, disable_default_implementation: bool, form_fields: List,
                  handle_post_sign_up: Callable[[User, Union[EmailPasswordSignUpContext, ThirdPartyContext]], Awaitable]):
         self.disable_default_implementation = disable_default_implementation
         self.form_fields = form_fields
@@ -83,7 +81,7 @@ def validate_and_normalise_sign_up_config(config=None) -> SignUpFeature:
     disable_default_implementation = False
     if 'disable_default_implementation' in config:
         disable_default_implementation = config['disable_default_implementation']
-    form_fields = normalise_sign_up_form_fields(config['form_fields'] if 'form_fields' in config else None)
+    form_fields = config['form_fields'] if 'form_fields' in config else []
     handle_post_sign_up = config[
         'handle_post_sign_up'] if 'handle_post_sign_up' in config else default_handle_post_sign_up
     return SignUpFeature(disable_default_implementation, form_fields, handle_post_sign_up)
@@ -197,7 +195,7 @@ class ThirdPartyEmailPasswordConfig:
 
 
 def validate_and_normalise_user_input(recipe: ThirdPartyEmailPasswordRecipe, config) -> ThirdPartyEmailPasswordConfig:
-    validate_the_structure_of_user_input(config, INPUT_SCHEMA, 'emailpassword recipe', recipe)
+    validate_the_structure_of_user_input(config, INPUT_SCHEMA, 'thirdpartyemailpassword recipe', recipe)
     session_feature = validate_and_normalise_session_feature_config(
         config['session_feature'] if 'session_feature' in config else None)
     sign_in_feature = validate_and_normalise_sign_in_config(
@@ -210,7 +208,7 @@ def validate_and_normalise_user_input(recipe: ThirdPartyEmailPasswordRecipe, con
         recipe,
         config['email_verification_feature'] if 'email_verification_feature' in config else None)
     providers = config['providers'] if 'providers' in config else []
-    reset_password_using_token_feature = config['reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else None
+    reset_password_using_token_feature = config['reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else {}
     return ThirdPartyEmailPasswordConfig(session_feature, sign_in_feature, sign_up_feature, sign_out_feature, email_verification_feature, providers, reset_password_using_token_feature)
 
 

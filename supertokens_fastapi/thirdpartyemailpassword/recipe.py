@@ -113,10 +113,11 @@ class ThirdPartyEmailPasswordRecipe(RecipeModule):
                 },
                 'sign_in_and_up_feature': {
                     'disable_default_implementation': self.config.sign_in_feature.disable_default_implementation,
-                    'handle_post_sign_up_in': third_party_recipe_sign_in_feature_handle_post_sign_up_in
+                    'handle_post_sign_up_in': third_party_recipe_sign_in_feature_handle_post_sign_up_in,
+                    'providers': self.config.providers
                 },
                 'sign_out_feature': {
-                    'disable_default_implementation': self.config.sign_out_feature.disable_default_implementation,
+                    'disable_default_implementation': True
                 },
                 'email_verification_feature': {
                     'disable_default_implementation': True
@@ -170,7 +171,7 @@ class ThirdPartyEmailPasswordRecipe(RecipeModule):
     def init(config=None):
         def func(app_info: AppInfo):
             if ThirdPartyEmailPasswordRecipe.__instance is None:
-                ThirdPartyEmailPasswordRecipe.__instance = ThirdPartyEmailPasswordRecipe(ThirdPartyRecipe.recipe_id, app_info, config)
+                ThirdPartyEmailPasswordRecipe.__instance = ThirdPartyEmailPasswordRecipe(ThirdPartyEmailPasswordRecipe.recipe_id, app_info, config)
                 return ThirdPartyEmailPasswordRecipe.__instance
             else:
                 raise_general_exception(None, 'ThirdPartyEmailPassword recipe has already been initialised. Please '

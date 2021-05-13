@@ -30,19 +30,19 @@ from httpx import AsyncClient
 async def handle_sign_in_up_api(recipe: ThirdPartyRecipe, request: Request):
     body = await request.json()
 
-    if 'thirdPartyId' not in body or isinstance(body['thirdPartyId'], str):
+    if 'thirdPartyId' not in body or not isinstance(body['thirdPartyId'], str):
         raise_bad_input_exception(recipe, 'Please provide the thirdPartyId in request body')
 
-    if 'code' not in body or isinstance(body['code'], str):
+    if 'code' not in body or not isinstance(body['code'], str):
         raise_bad_input_exception(recipe, 'Please provide the code in request body')
 
-    if 'redirectURI' not in body or isinstance(body['redirectURI'], str):
+    if 'redirectURI' not in body or not isinstance(body['redirectURI'], str):
         raise_bad_input_exception(recipe, 'Please provide the redirectURI in request body')
 
     third_party_id = body['thirdPartyId']
     provider: Provider = find_first_occurrence_in_list(lambda x: x.id == third_party_id, recipe.providers)
     if provider is None:
-        raise_bad_input_exception(recipe, 'The third party provider ' + third_party_id + 'seems to not be configured '
+        raise_bad_input_exception(recipe, 'The third party provider ' + third_party_id + ' seems to not be configured '
                                                                                          'on the backend. Please '
                                                                                          'check your frontend and '
                                                                                          'backend configs.')
@@ -56,7 +56,7 @@ async def handle_sign_in_up_api(recipe: ThirdPartyRecipe, request: Request):
         async with AsyncClient() as client:
             access_token_response = await client.post(access_token_api_info.url, data=access_token_api_info.params, headers=headers)
             access_token_response = access_token_response.json()
-            user_info = await provider.get_profile_info(access_token_response.json())
+            user_info = await provider.get_profile_info(access_token_response)
     except Exception as e:
         raise_general_exception(recipe, e)
 

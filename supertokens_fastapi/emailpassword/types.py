@@ -105,7 +105,7 @@ INPUT_SCHEMA = {
         'sign_up_feature': SIGN_UP_FEATURE_INPUT_SCHEMA,
         'sign_in_feature': SIGN_IN_FEATURE_INPUT_SCHEMA,
         'sign_out_feature': SIGN_OUT_FEATURE_INPUT_SCHEMA,
-        'reset_token_using_password_feature': RESET_PASSWORD_USING_TOKEN_FEATURE_INPUT_SCHEMA,
+        'reset_password_using_token_feature': RESET_PASSWORD_USING_TOKEN_FEATURE_INPUT_SCHEMA,
         'email_verification_feature': EMAIL_VERIFICATION_FEATURE_INPUT_SCHEMA
     },
     'additionalProperties': False

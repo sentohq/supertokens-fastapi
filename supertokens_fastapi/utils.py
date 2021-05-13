@@ -34,7 +34,8 @@ def validate_the_structure_of_user_input(config, input_schema, config_root, reci
     try:
         validate(config, input_schema)
     except ValidationError as e:
-        path = '.'.join(e.path)
+        print(input_schema, config)
+        path = '.'.join(list(map(str, e.path)))
         if not path == '':
             path = 'for path "' + path + '": '
 

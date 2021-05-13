@@ -17,8 +17,9 @@ under the License.
 import sys
 
 sys.path.append('../..')  # noqa: E402
-from supertokens_fastapi import init, get_all_cors_headers, session, emailpassword
+from supertokens_fastapi import init, get_all_cors_headers, session, thirdpartyemailpassword
 from supertokens_fastapi.session import Session
+# from supertokens_fastapi.thirdparty import Github, Google, Facebook
 from fastapi import FastAPI, Depends
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, PlainTextResponse
@@ -40,7 +41,7 @@ init(app, {
         'website_domain': "http://localhost:8888",
         'api_base_path': "/auth"
     },
-    'recipe_list': [emailpassword.init(), session.init()],
+    'recipe_list': [thirdpartyemailpassword.init(), session.init()],
     'telemetry': False
 })
 
@@ -52,13 +53,13 @@ def send_file():
     return HTMLResponse(content=file_contents)
 
 
-@app.get('/user')
+@app.get('/sessioninfo')
 async def get_user(user_session: Session = Depends(session.verify_session())):
-    print(user_session.get_user_id())
     return JSONResponse({
         'userId': user_session.get_user_id(),
         'sessionHandle': user_session.get_handle(),
-        'jwtPayload': user_session.get_jwt_payload()
+        'jwtPayload': user_session.get_jwt_payload(),
+        'sessionData': await user_session.get_session_data()
     })
 
 
@@ -82,7 +83,7 @@ def f_500(_, e):
 app = CORSMiddleware(
     app=app,
     allow_origins=[
-        "http://localhost:8888"
+        "http://localhost:3000"
     ],
     allow_credentials=True,
     allow_methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
