@@ -97,11 +97,16 @@ class User:
         self.third_party_info = third_party_info
 
 
+class UserInfoEmail:
+    def __init__(self, email: str, email_verified: bool):
+        self.id = email
+        self.is_verified = email_verified
+
+
 class UserInfo:
-    def __init__(self, user_id: str, email: Union[str, None] = None, email_verified: [bool, None] = None):
+    def __init__(self, user_id: str, email: Union[UserInfoEmail, None] = None):
         self.user_id = user_id
         self.email = email
-        self.email_verified = email_verified
 
 
 class AccessTokenAPI:

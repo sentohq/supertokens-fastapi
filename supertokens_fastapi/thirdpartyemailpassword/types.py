@@ -13,8 +13,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-from typing import Callable, Union, List, Dict
-from fastapi.requests import Request
+from typing import Union, List
 from supertokens_fastapi.emailpassword.types import FormField
 
 type_string = {
@@ -131,25 +130,6 @@ class User:
         self.email = email
         self.time_joined = time_joined
         self.third_party_info = third_party_info
-
-
-class UserInfo:
-    def __init__(self, user_id: str, email: Union[str, None] = None, email_verified: [bool, None] = None):
-        self.user_id = user_id
-        self.email = email
-        self.email_verified = email_verified
-
-
-class AccessTokenAPI:
-    def __init__(self, url: str, params: Dict[str, str]):
-        self.url = url
-        self.params = params
-
-
-class AuthorisationRedirectAPI:
-    def __init__(self, url: str, params: Dict[str, Union[str, Callable[[Request], str]]]):
-        self.url = url
-        self.params = params
 
 
 class SignInUpResponse:

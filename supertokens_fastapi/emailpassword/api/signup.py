@@ -41,9 +41,9 @@ async def handle_sign_up_api(recipe: EmailPasswordRecipe, request: Request):
         lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields))
 
     jwt_payload_promise = recipe.config.session_feature.set_jwt_payload(user, get_filtered_list(
-        lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields), 'signin')
+        lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields), 'signup')
     session_data_promise = recipe.config.session_feature.set_session_data(user, get_filtered_list(
-        lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields), 'signin')
+        lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields), 'signup')
 
     jwt_payload = {}
     session_data = {}

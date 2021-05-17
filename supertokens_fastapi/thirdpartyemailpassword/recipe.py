@@ -102,8 +102,6 @@ class ThirdPartyEmailPasswordRecipe(RecipeModule):
                 'disable_default_implementation': True
             }
         }, EmailPasswordRecipe.recipe_id)
-        self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info,
-                                                                 self.config.email_verification_feature)
         self.third_party_recipe: Union[ThirdPartyRecipe, None] = None
         if len(self.config.providers) != 0:
             self.third_party_recipe = ThirdPartyRecipe(recipe_id, app_info, {
@@ -112,7 +110,7 @@ class ThirdPartyEmailPasswordRecipe(RecipeModule):
                     'set_session_data': third_party_recipe_session_feature_set_session_data
                 },
                 'sign_in_and_up_feature': {
-                    'disable_default_implementation': self.config.sign_in_feature.disable_default_implementation,
+                    'disable_default_implementation': self.config.sign_in_feature.disable_default_implementation or self.config.sign_up_feature.disable_default_implementation,
                     'handle_post_sign_up_in': third_party_recipe_sign_in_feature_handle_post_sign_up_in,
                     'providers': self.config.providers
                 },
@@ -123,6 +121,8 @@ class ThirdPartyEmailPasswordRecipe(RecipeModule):
                     'disable_default_implementation': True
                 }
             }, ThirdPartyRecipe.recipe_id)
+        self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info,
+                                                                 self.config.email_verification_feature)
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
         return isinstance(err, SuperTokensError) and (

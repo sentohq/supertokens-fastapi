@@ -34,4 +34,6 @@ async def handle_signout_api(recipe: SessionRecipe, request: Request):
 
     await session.revoke_session()
 
-    return JSONResponse({})
+    return JSONResponse({
+        'status': 'OK'
+    })

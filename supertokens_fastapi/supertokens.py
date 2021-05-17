@@ -136,7 +136,6 @@ class Supertokens:
             telemetry = config['telemetry']
 
         if telemetry:
-            print(telemetry)
             self.send_telemetry()
 
     async def send_telemetry(self):

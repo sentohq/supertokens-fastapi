@@ -60,8 +60,8 @@ async def handle_sign_in_up_api(recipe: ThirdPartyRecipe, request: Request):
     except Exception as e:
         raise_general_exception(recipe, e)
 
-    email = user_info.email
-    email_verified = user_info.email_verified
+    email = user_info.email.id if user_info.email is not None else None
+    email_verified = user_info.email.is_verified if user_info.email is not None else None
     if email is None or email_verified is None:
         raise_no_email_given_by_provider_exception('Provider ' + provider.id + 'returned no email info for the user.')
     signinup_response = await recipe.sign_in_up(provider.id, user_info.user_id, email, email_verified)

@@ -16,7 +16,7 @@ under the License.
 from __future__ import annotations
 from supertokens_fastapi.thirdparty.provider import Provider
 from typing import List, Union, Dict, Callable, TYPE_CHECKING
-from supertokens_fastapi.thirdparty.types import UserInfo, AccessTokenAPI, AuthorisationRedirectAPI
+from supertokens_fastapi.thirdparty.types import UserInfo, AccessTokenAPI, AuthorisationRedirectAPI, UserInfoEmail
 from httpx import AsyncClient
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class Github(Provider):
             if len(email_info) == 0:
                 return UserInfo(user_id)
             is_email_verified = email_info[0]['verified'] if 'verified' in email_info[0] else False
-            return UserInfo(user_id, user_info['email'], is_email_verified)
+            return UserInfo(user_id, UserInfoEmail(user_info['email'], is_email_verified))
 
     def get_authorisation_redirect_api_info(self) -> AuthorisationRedirectAPI:
         params = {

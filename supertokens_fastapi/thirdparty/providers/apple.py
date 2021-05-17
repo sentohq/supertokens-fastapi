@@ -16,7 +16,7 @@ under the License.
 from __future__ import annotations
 from supertokens_fastapi.thirdparty.provider import Provider
 from typing import List, Union, Dict, Callable, TYPE_CHECKING
-from supertokens_fastapi.thirdparty.types import UserInfo, AccessTokenAPI, AuthorisationRedirectAPI
+from supertokens_fastapi.thirdparty.types import UserInfo, AccessTokenAPI, AuthorisationRedirectAPI, UserInfoEmail
 if TYPE_CHECKING:
     from fastapi.requests import Request
 from jwt import encode, decode
@@ -65,7 +65,7 @@ class Apple(Provider):
 
         user_id = payload['email']
         is_email_verified = payload['email_verified'] if 'email_verified' in payload else False
-        return UserInfo(user_id, user_id, is_email_verified)
+        return UserInfo(user_id, UserInfoEmail(user_id, is_email_verified))
 
     def get_authorisation_redirect_api_info(self) -> AuthorisationRedirectAPI:
         params = {

@@ -73,7 +73,11 @@ class EmailPasswordRecipe(RecipeModule):
         self.email_verification_recipe = EmailVerificationRecipe(recipe_id, app_info, self.config.email_verification_feature)
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
-        return isinstance(err, SuperTokensError) and err.recipe == self
+        return isinstance(err, SuperTokensError) and (
+            err.recipe == self
+            or
+            self.email_verification_recipe.is_error_from_this_or_child_recipe_based_on_instance(err)
+        )
 
     def get_apis_handled(self) -> List[APIHandled]:
         return [

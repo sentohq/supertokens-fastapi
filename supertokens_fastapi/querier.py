@@ -93,8 +93,8 @@ class Querier:
 
         if api_version is None:
             raise_general_exception(None, 'The running SuperTokens core version is not compatible with this FastAPI '
-                                          'SDK. Please visit https://supertokens.io/docs/community/compatibility to '
-                                          'find the right versions')
+                                          'SDK. Please visit https://supertokens.io/docs/community/compatibility-table '
+                                          'to find the right versions')
 
         Querier.__api_version = api_version
         # TODO: server-less
@@ -204,7 +204,5 @@ class Querier:
         except (ConnectionError, NetworkError, ConnectTimeout):
             return await self.__send_request_helper(
                 path, method, http_function, no_of_tries - 1)
-
-        # TODO
         except Exception as e:
             raise_general_exception(None, e)

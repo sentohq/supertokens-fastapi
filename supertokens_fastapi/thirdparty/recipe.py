@@ -64,7 +64,11 @@ class ThirdPartyRecipe(RecipeModule):
         self.providers = self.config.sign_in_and_up_feature.providers
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
-        return isinstance(err, SuperTokensError) and err.recipe == self
+        return isinstance(err, SuperTokensError) and (
+            err.recipe == self
+            or
+            self.email_verification_recipe.is_error_from_this_or_child_recipe_based_on_instance(err)
+        )
 
     def get_apis_handled(self) -> List[APIHandled]:
         return [
