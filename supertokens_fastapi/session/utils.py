@@ -79,7 +79,7 @@ def get_top_level_domain_for_same_site_resolution(url: str, recipe: SessionRecip
     if parsed_url == '':
         raise_general_exception(recipe, 'Please make sure that the apiDomain and websiteDomain have correct values')
 
-    return parsed_url.domain
+    return parsed_url.domain + '.' + parsed_url.suffix
 
 
 class SessionRefreshFeature:
