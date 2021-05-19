@@ -72,7 +72,7 @@ def validate_and_normalise_session_feature_config(config=None) -> SessionFeature
         'set_jwt_payload'] if config is not None and 'set_jwt_payload' in config else default_set_jwt_payload_for_session
 
     async def set_jwt_payload(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
-                              context: Union[EmailPasswordSignUpContext, ThirdPartyContext],
+                              context: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext],
                               action: Literal['signin', 'signup']):
         if isinstance(user, EmailPasswordUser):
             return await intermediate_set_jwt_payload(User(user.user_id, user.email, user.time_joined, None),
@@ -83,7 +83,7 @@ def validate_and_normalise_session_feature_config(config=None) -> SessionFeature
         'set_session_data'] if config is not None and 'set_session_data' in config else default_set_session_data_for_session
 
     async def set_session_data(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
-                               context: Union[EmailPasswordSignUpContext, ThirdPartyContext],
+                               context: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext],
                                action: Literal['signin', 'signup']):
         if isinstance(user, EmailPasswordUser):
             return await intermediate_set_session_data(User(user.user_id, user.email, user.time_joined, None),
