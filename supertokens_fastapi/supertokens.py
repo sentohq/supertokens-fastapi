@@ -52,6 +52,7 @@ from .exceptions import (
     BadInputError
 )
 from .session.session_recipe import SessionRecipe
+import asyncio
 
 
 class AppInfo:
@@ -136,7 +137,7 @@ class Supertokens:
             telemetry = config['telemetry']
 
         if telemetry:
-            self.send_telemetry()
+            asyncio.create_task(self.send_telemetry())
 
     async def send_telemetry(self):
         try:
@@ -147,14 +148,16 @@ class Supertokens:
                 telemetry_id = response['telemetry_id']
             data = {
                 'appName': self.app_info.app_name,
-                'websiteDomain': self.app_info.website_domain.get_as_string_dangerous()
+                'websiteDomain': self.app_info.website_domain.get_as_string_dangerous(),
+                'sdk': 'fastapi'
             }
             if telemetry_id is not None:
                 data = {
                     **data,
                     'telemetryId': telemetry_id
                 }
-            await AsyncClient.post(url=TELEMETRY_SUPERTOKENS_API_URL, json=data, headers={'api-version': TELEMETRY_SUPERTOKENS_API_VERSION})
+            async with AsyncClient() as client:
+                await client.post(url=TELEMETRY_SUPERTOKENS_API_URL, json=data, headers={'api-version': TELEMETRY_SUPERTOKENS_API_VERSION})
         except Exception:
             pass
 

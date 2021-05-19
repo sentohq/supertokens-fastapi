@@ -15,5 +15,3 @@ under the License.
 """
 USER_EMAIL_VERIFY_TOKEN = '/user/email/verify/token'
 USER_EMAIL_VERIFY = '/user/email/verify'
-RECIPE_USER_EMAIL_VERIFY_TOKEN = '/recipe/user/email/verify/token'
-RECIPE_USER_EMAIL_VERIFY = '/recipe/user/email/verify'

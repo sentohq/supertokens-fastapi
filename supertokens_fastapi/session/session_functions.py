@@ -16,10 +16,6 @@ under the License.
 from __future__ import annotations
 from typing import Union, TYPE_CHECKING, List
 from .access_token import get_info_from_access_token
-from .constants import (
-    RECIPE_SESSION, RECIPE_SESSION_VERIFY, RECIPE_SESSION_REFRESH,
-    RECIPE_SESSION_REMOVE, RECIPE_SESSION_USER, RECIPE_SESSION_DATA, RECIPE_JWT_DATA
-)
 if TYPE_CHECKING:
     from .session_recipe import SessionRecipe
 from supertokens_fastapi.normalised_url_path import NormalisedURLPath
@@ -42,7 +38,7 @@ async def create_new_session(recipe: SessionRecipe, user_id: str, jwt_payload: U
 
     handshake_info = await recipe.get_handshake_info()
     enable_anti_csrf = handshake_info.anti_csrf == 'VIA_TOKEN'
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION), {
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session'), {
         'userId': user_id,
         'userDataInJWT': jwt_payload,
         'userDataInDatabase': session_data,
@@ -102,7 +98,7 @@ async def get_session(recipe: SessionRecipe, access_token: str, anti_csrf_token:
     if anti_csrf_token is not None:
         data['antiCsrfToken'] = anti_csrf_token
 
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION_VERIFY), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session/verify'), data)
     if response['status'] == 'OK':
         handshake_info = await recipe.get_handshake_info()
         handshake_info.update_jwt_signing_public_key_info(response['jwtSigningPublicKey'],
@@ -131,7 +127,7 @@ async def refresh_session(recipe: SessionRecipe, refresh_token: str, anti_csrf_t
         if not contains_custom_header:
             raise_try_refresh_token_exception(recipe, 'anti-csrf check failed. Please pass \'rid: "session"\' header '
                                               'in the request.')
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION_REFRESH), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session/refresh'), data)
     if response['status'] == 'OK':
         response.pop('status', None)
         return response
@@ -146,35 +142,35 @@ async def refresh_session(recipe: SessionRecipe, refresh_token: str, anti_csrf_t
 
 
 async def revoke_all_sessions_for_user(recipe: SessionRecipe, user_id: str) -> List[str]:
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION_REMOVE), {
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session/remove'), {
         'userId': user_id
     })
     return response['sessionHandlesRevoked']
 
 
 async def get_all_session_handles_for_user(recipe: SessionRecipe, user_id: str) -> List[str]:
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_SESSION_USER), {
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/session/user'), {
         'userId': user_id
     })
     return response['sessionHandles']
 
 
 async def revoke_session(recipe: SessionRecipe, session_handle: str) -> bool:
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION_REMOVE), {
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session/remove'), {
         'sessionHandles': [session_handle]
     })
     return len(response['sessionHandlesRevoked']) == 1
 
 
 async def revoke_multiple_sessions(recipe: SessionRecipe, session_handles: List[str]) -> List[str]:
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SESSION_REMOVE), {
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/session/remove'), {
         'sessionHandles': session_handles
     })
     return response['sessionHandlesRevoked']
 
 
 async def get_session_data(recipe: SessionRecipe, session_handle: str) -> dict:
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_SESSION_DATA), {
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/session/data'), {
         'sessionHandle': session_handle
     })
     if response['status'] == 'OK':
@@ -184,7 +180,7 @@ async def get_session_data(recipe: SessionRecipe, session_handle: str) -> dict:
 
 
 async def update_session_data(recipe: SessionRecipe, session_handle: str, new_session_data: dict):
-    response = await recipe.get_querier().send_put_request(NormalisedURLPath(recipe, RECIPE_SESSION_DATA), {
+    response = await recipe.get_querier().send_put_request(NormalisedURLPath(recipe, '/recipe/session/data'), {
         'sessionHandle': session_handle,
         'userDataInDatabase': new_session_data
     })
@@ -193,7 +189,7 @@ async def update_session_data(recipe: SessionRecipe, session_handle: str, new_se
 
 
 async def get_jwt_payload(recipe: SessionRecipe, session_handle: str) -> dict:
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_JWT_DATA), {
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/jwt/data'), {
         'sessionHandle': session_handle
     })
     if response['status'] == 'OK':
@@ -203,7 +199,7 @@ async def get_jwt_payload(recipe: SessionRecipe, session_handle: str) -> dict:
 
 
 async def update_jwt_payload(recipe: SessionRecipe, session_handle: str, new_jwt_payload: dict):
-    response = await recipe.get_querier().send_put_request(NormalisedURLPath(recipe, RECIPE_JWT_DATA), {
+    response = await recipe.get_querier().send_put_request(NormalisedURLPath(recipe, '/recipe/jwt/data'), {
         'sessionHandle': session_handle,
         'userDataInJWT': new_jwt_payload
     })

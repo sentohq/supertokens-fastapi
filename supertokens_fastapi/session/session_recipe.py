@@ -40,11 +40,12 @@ if TYPE_CHECKING:
     from fastapi.requests import Request
     from supertokens_fastapi.supertokens import AppInfo
 from .utils import validate_and_normalise_user_input
-from .constants import RECIPE_HANDSHAKE, SESSION_REFRESH, SIGNOUT
+from .constants import SESSION_REFRESH, SIGNOUT
 from supertokens_fastapi.normalised_url_path import NormalisedURLPath
 from supertokens_fastapi.recipe_module import RecipeModule, APIHandled
 from supertokens_fastapi.process_state import AllowedProcessStates, ProcessState
 from supertokens_fastapi.exceptions import raise_general_exception, SuperTokensError
+import asyncio
 
 
 class HandshakeInfo:
@@ -74,6 +75,13 @@ class SessionRecipe(RecipeModule):
             config = {}
         self.config = validate_and_normalise_user_input(self, app_info, config)
         self.handshake_info: Union[HandshakeInfo, None] = None
+
+        async def call_get_handshake_info():
+            try:
+                await self.get_handshake_info()
+            except Exception:
+                pass
+        asyncio.create_task(call_get_handshake_info())
 
     def is_error_from_this_or_child_recipe_based_on_instance(self, err):
         return isinstance(err, SuperTokensError) and err.recipe == self
@@ -131,7 +139,7 @@ class SessionRecipe(RecipeModule):
     async def get_handshake_info(self) -> HandshakeInfo:
         if self.handshake_info is None:
             ProcessState.get_instance().add_state(AllowedProcessStates.CALLING_SERVICE_IN_GET_HANDSHAKE_INFO)
-            response = await self.get_querier().send_post_request(NormalisedURLPath(self, RECIPE_HANDSHAKE), {})
+            response = await self.get_querier().send_post_request(NormalisedURLPath(self, '/recipe/handshake'), {})
             self.handshake_info = HandshakeInfo({
                 **response,
                 'antiCsrf': self.config.anti_csrf

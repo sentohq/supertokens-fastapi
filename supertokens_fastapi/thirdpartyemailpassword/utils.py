@@ -24,6 +24,7 @@ from .types import (
     EmailPasswordSessionDataAndJWTContext
 )
 from typing import List, Literal, Callable, Awaitable, TYPE_CHECKING, Union
+
 if TYPE_CHECKING:
     from .recipe import ThirdPartyEmailPasswordRecipe
 from supertokens_fastapi.utils import validate_the_structure_of_user_input
@@ -32,7 +33,8 @@ from .exceptions import (
     raise_invalid_pagination_token_exception
 )
 from base64 import b64encode, b64decode
-from supertokens_fastapi.emailpassword.types import UsersResponse
+from supertokens_fastapi.emailpassword.types import UsersResponse, User as EmailPasswordUser
+from supertokens_fastapi.thirdparty.types import User as ThirdPartyPasswordUser
 
 
 async def default_handle_post_sign_up(_: User, __: Union[EmailPasswordSignUpContext, ThirdPartyContext]):
@@ -43,33 +45,58 @@ async def default_handle_post_sign_in(_: User, __: Union[EmailPasswordSignInCont
     pass
 
 
-async def default_set_session_data_for_session(_: User, __: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext], ___: Literal['signin', 'signup']):
+async def default_set_session_data_for_session(_: User,
+                                               __: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext],
+                                               ___: Literal['signin', 'signup']):
     return {}
 
 
-async def default_set_jwt_payload_for_session(_: User, __: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext], ___: Literal['signin', 'signup']):
+async def default_set_jwt_payload_for_session(_: User,
+                                              __: Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext],
+                                              ___: Literal['signin', 'signup']):
     return {}
 
 
 class SessionFeature:
-    def __init__(self, set_jwt_payload: Callable[[User, Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext], Literal['signin', 'signup']], Awaitable[any]],
-                 set_session_data: Callable[[User, Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext], Literal['signin', 'signup']], Awaitable[any]]):
+    def __init__(self, set_jwt_payload: Callable[
+        [User, Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext], Literal['signin', 'signup']], Awaitable[
+            any]],
+        set_session_data: Callable[[User, Union[EmailPasswordSessionDataAndJWTContext, ThirdPartyContext],
+                                    Literal['signin', 'signup']], Awaitable[any]]):
         self.set_jwt_payload = set_jwt_payload
         self.set_session_data = set_session_data
 
 
 def validate_and_normalise_session_feature_config(config=None) -> SessionFeature:
-    set_jwt_payload = config[
+    intermediate_set_jwt_payload = config[
         'set_jwt_payload'] if config is not None and 'set_jwt_payload' in config else default_set_jwt_payload_for_session
-    set_session_data = config[
+
+    async def set_jwt_payload(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
+                              context: Union[EmailPasswordSignUpContext, ThirdPartyContext],
+                              action: Literal['signin', 'signup']):
+        if isinstance(user, EmailPasswordUser):
+            return await intermediate_set_jwt_payload(User(user.user_id, user.email, user.time_joined, None),
+                                                      context, action)
+        return await intermediate_set_jwt_payload(user, context, action)
+
+    intermediate_set_session_data = config[
         'set_session_data'] if config is not None and 'set_session_data' in config else default_set_session_data_for_session
+
+    async def set_session_data(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
+                               context: Union[EmailPasswordSignUpContext, ThirdPartyContext],
+                               action: Literal['signin', 'signup']):
+        if isinstance(user, EmailPasswordUser):
+            return await intermediate_set_session_data(User(user.user_id, user.email, user.time_joined, None),
+                                                       context, action)
+        return await intermediate_set_session_data(user, context, action)
 
     return SessionFeature(set_jwt_payload, set_session_data)
 
 
 class SignUpFeature:
     def __init__(self, disable_default_implementation: bool, form_fields: List,
-                 handle_post_sign_up: Callable[[User, Union[EmailPasswordSignUpContext, ThirdPartyContext]], Awaitable]):
+                 handle_post_sign_up: Callable[
+                     [User, Union[EmailPasswordSignUpContext, ThirdPartyContext]], Awaitable]):
         self.disable_default_implementation = disable_default_implementation
         self.form_fields = form_fields
         self.handle_post_sign_up = handle_post_sign_up
@@ -82,13 +109,22 @@ def validate_and_normalise_sign_up_config(config=None) -> SignUpFeature:
     if 'disable_default_implementation' in config:
         disable_default_implementation = config['disable_default_implementation']
     form_fields = config['form_fields'] if 'form_fields' in config else []
-    handle_post_sign_up = config[
+    intermediate_handle_post_sign_up = config[
         'handle_post_sign_up'] if 'handle_post_sign_up' in config else default_handle_post_sign_up
+
+    async def handle_post_sign_up(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
+                                  context: Union[EmailPasswordSignUpContext, ThirdPartyContext]):
+        if isinstance(user, EmailPasswordUser):
+            return await intermediate_handle_post_sign_up(User(user.user_id, user.email, user.time_joined, None),
+                                                          context)
+        return await intermediate_handle_post_sign_up(user, context)
+
     return SignUpFeature(disable_default_implementation, form_fields, handle_post_sign_up)
 
 
 class SignInFeature:
-    def __init__(self, disable_default_implementation: bool, handle_post_sign_in: Callable[[User, Union[EmailPasswordSignInContext, ThirdPartyContext]], Awaitable]):
+    def __init__(self, disable_default_implementation: bool, handle_post_sign_in: Callable[
+            [User, Union[EmailPasswordSignInContext, ThirdPartyContext]], Awaitable]):
         self.disable_default_implementation = disable_default_implementation
         self.handle_post_sign_in = handle_post_sign_in
 
@@ -99,8 +135,16 @@ def validate_and_normalise_sign_in_config(config=None) -> SignInFeature:
     disable_default_implementation = False
     if 'disable_default_implementation' in config:
         disable_default_implementation = config['disable_default_implementation']
-    handle_post_sign_in = config[
+    intermediate_handle_post_sign_in = config[
         'handle_post_sign_in'] if 'handle_post_sign_in' in config else default_handle_post_sign_in
+
+    async def handle_post_sign_in(user: Union[EmailPasswordUser, ThirdPartyPasswordUser],
+                                  context: Union[EmailPasswordSignInContext, ThirdPartyContext]):
+        if isinstance(user, EmailPasswordUser):
+            return await intermediate_handle_post_sign_in(User(user.user_id, user.email, user.time_joined, None),
+                                                          context)
+        return await intermediate_handle_post_sign_in(user, context)
+
     return SignInFeature(disable_default_implementation, handle_post_sign_in)
 
 
@@ -118,7 +162,8 @@ def validate_and_normalise_sign_out_config(config=None) -> SignOutFeature:
     return SignOutFeature(disable_default_implementation)
 
 
-def email_verification_create_and_send_custom_email(recipe: ThirdPartyEmailPasswordRecipe, create_and_send_custom_email):
+def email_verification_create_and_send_custom_email(recipe: ThirdPartyEmailPasswordRecipe,
+                                                    create_and_send_custom_email):
     async def func(user, link):
         user_info = await recipe.get_user_by_id(user.id)
         if user_info is None:
@@ -138,7 +183,8 @@ def email_verification_get_email_verification_url(recipe: ThirdPartyEmailPasswor
     return func
 
 
-def email_verification_handle_post_email_verification(recipe: ThirdPartyEmailPasswordRecipe, handle_post_email_verification):
+def email_verification_handle_post_email_verification(recipe: ThirdPartyEmailPasswordRecipe,
+                                                      handle_post_email_verification):
     async def func(user):
         user_info = await recipe.get_user_by_id(user.id)
         if user_info is None:
@@ -208,15 +254,18 @@ def validate_and_normalise_user_input(recipe: ThirdPartyEmailPasswordRecipe, con
         recipe,
         config['email_verification_feature'] if 'email_verification_feature' in config else None)
     providers = config['providers'] if 'providers' in config else []
-    reset_password_using_token_feature = config['reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else {}
-    return ThirdPartyEmailPasswordConfig(session_feature, sign_in_feature, sign_up_feature, sign_out_feature, email_verification_feature, providers, reset_password_using_token_feature)
+    reset_password_using_token_feature = config[
+        'reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else {}
+    return ThirdPartyEmailPasswordConfig(session_feature, sign_in_feature, sign_up_feature, sign_out_feature,
+                                         email_verification_feature, providers, reset_password_using_token_feature)
 
 
 def create_new_pagination_token(user_id: str, time_joined: int) -> str:
     return b64encode(user_id + ';' + str(time_joined))
 
 
-def combine_pagination_tokens(third_party_pagination_token: Union[str, None], email_password_pagination_token: Union[str, None]):
+def combine_pagination_tokens(third_party_pagination_token: Union[str, None],
+                              email_password_pagination_token: Union[str, None]):
     if third_party_pagination_token is None:
         third_party_pagination_token = 'null'
     if email_password_pagination_token is None:
@@ -228,18 +277,20 @@ def extract_pagination_token(recipe: ThirdPartyEmailPasswordRecipe, next_paginat
     extracted_tokens = b64decode(next_pagination_token).split(';')
     if len(extracted_tokens) != 2:
         raise_invalid_pagination_token_exception(recipe, 'nextPaginationToken is invalid')
-    return NextPaginationToken(None if extracted_tokens[0] == 'null' else extracted_tokens[0], None if extracted_tokens[1] == 'null' else extracted_tokens[1])
+    return NextPaginationToken(None if extracted_tokens[0] == 'null' else extracted_tokens[0],
+                               None if extracted_tokens[1] == 'null' else extracted_tokens[1])
 
 
-def combine_pagination_results(third_party_result: UsersResponse, email_password_result: UsersResponse, limit: int, oldest_first: bool) -> UsersResponse:
+def combine_pagination_results(third_party_result: UsersResponse, email_password_result: UsersResponse, limit: int,
+                               oldest_first: bool) -> UsersResponse:
     max_loop = min(limit, len(third_party_result.users), len(email_password_result.users))
     third_party_result_loop_index = 0
     email_password_result_loop_index = 0
     users = []
     for i in range(max_loop):
         if (
-            third_party_result_loop_index != len(third_party_result.users)
-            and
+                third_party_result_loop_index != len(third_party_result.users)
+                and
                 (
                     email_password_result_loop_index == len(email_password_result.users)
                     or
@@ -249,10 +300,11 @@ def combine_pagination_results(third_party_result: UsersResponse, email_password
                     )
                     or
                     (
-                        not oldest_first and third_party_result.users[third_party_result_loop_index].time_joined >
+                        not oldest_first and third_party_result.users[
+                            third_party_result_loop_index].time_joined >
                         email_password_result.users[email_password_result_loop_index].time_joined
                     )
-            )
+                )
         ):
             users.append(third_party_result.users[third_party_result_loop_index])
             third_party_result_loop_index += 1

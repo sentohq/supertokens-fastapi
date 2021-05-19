@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse
 from supertokens_fastapi.exceptions import raise_general_exception
 from supertokens_fastapi.session import verify_session
 from supertokens_fastapi.emailverification.types import User
+from fastapi.background import BackgroundTasks
 
 
 async def handle_generate_email_verify_token_api(recipe: EmailVerificationRecipe, request: Request):
@@ -37,10 +38,13 @@ async def handle_generate_email_verify_token_api(recipe: EmailVerificationRecipe
 
     email_verify_link = (await recipe.config.get_email_verification_url(user)) + '?token=' + token + '&rid' + recipe.get_recipe_id()
 
-    try:
-        await recipe.config.create_and_send_custom_email(user, email_verify_link)
-    except Exception:
-        pass
+    async def send_email():
+        try:
+            await recipe.config.create_and_send_custom_email(user, email_verify_link)
+        except Exception:
+            pass
+    background_task = BackgroundTasks()
+    background_task.add_task(send_email)
     return JSONResponse({
         'status': 'OK'
-    })
+    }, background=background_task)

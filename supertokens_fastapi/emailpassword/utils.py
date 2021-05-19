@@ -18,6 +18,7 @@ from os import environ
 from .types import User, FormField, NormalisedFormField, INPUT_SCHEMA
 from typing import List, Literal, Union, Callable, Awaitable, TYPE_CHECKING
 from re import fullmatch
+
 if TYPE_CHECKING:
     from .recipe import EmailPasswordRecipe
     from supertokens_fastapi.supertokens import AppInfo
@@ -107,8 +108,9 @@ def default_create_and_send_custom_email(app_info: AppInfo) -> Callable[[User, s
                 'appName': app_info.app_name,
                 'passwordResetURL': password_reset_url_with_token
             }
-            await AsyncClient().post('https://api.supertokens.io/0/st/auth/password/reset', json=data,
-                                     headers={'api-version': '0'})
+            async with AsyncClient() as client:
+                await client.post('https://api.supertokens.io/0/st/auth/password/reset', json=data,
+                                  headers={'api-version': '0'})
         except Exception:
             pass
 

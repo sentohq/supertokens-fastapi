@@ -16,12 +16,6 @@ under the License.
 from __future__ import annotations
 from supertokens_fastapi.normalised_url_path import NormalisedURLPath
 from .types import User, UsersResponse, ThirdPartyInfo, SignInUpResponse
-from .constants import (
-    RECIPE_SIGNINUP,
-    RECIPE_USER,
-    RECIPE_USERS,
-    RECIPE_USERS_COUNT
-)
 from typing import Union, Literal, TYPE_CHECKING
 if TYPE_CHECKING:
     from .recipe import ThirdPartyRecipe
@@ -36,7 +30,7 @@ async def sign_in_up(recipe: ThirdPartyRecipe, third_party_id: str, third_party_
             'isVerified': email_verified
         }
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SIGNINUP), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/signinup'), data)
     return SignInUpResponse(
         User(
             response['user']['id'],
@@ -55,7 +49,7 @@ async def get_user_by_id(recipe: ThirdPartyRecipe, user_id: str) -> Union[User, 
     params = {
         'userId': user_id
     }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USER), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/user'), params)
     if 'status' in response and response['status'] == 'OK':
         return User(
             response['user']['id'],
@@ -74,7 +68,7 @@ async def get_user_by_third_party_info(recipe: ThirdPartyRecipe, third_party_id:
         'thirdPartyId': third_party_id,
         'thirdPartyUserId': third_party_user_id
     }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USER), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/user'), params)
     if 'status' in response and response['status'] == 'OK':
         return User(
             response['user']['id'],
@@ -103,7 +97,7 @@ async def get_users(recipe: ThirdPartyRecipe, time_joined_order: Literal['ASC', 
             'paginationToken': pagination_token,
             **params
         }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USERS), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/users'), params)
     next_pagination_token = None
     if 'nextPaginationToken' in response:
         next_pagination_token = response['nextPaginationToken']
@@ -126,5 +120,5 @@ async def get_users(recipe: ThirdPartyRecipe, time_joined_order: Literal['ASC', 
 
 
 async def get_users_count(recipe: ThirdPartyRecipe) -> int:
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USERS_COUNT))
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/users/count'))
     return int(response['count'])

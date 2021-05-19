@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from supertokens_fastapi.normalised_url_path import NormalisedURLPath
     from .session_recipe import SessionRecipe
 from . import session_functions
-from .constants import RECIPE_SESSION_REGENERATE
 from .exceptions import raise_unauthorised_exception
 
 
@@ -48,7 +47,7 @@ class Session:
         return await session_functions.update_session_data(self.__recipe, self.__session_handle, new_session_data)
 
     async def update_jwt_payload(self, new_jwt_payload) -> None:
-        result = await self.__recipe.get_querier().send_post_request(NormalisedURLPath(self.__recipe, RECIPE_SESSION_REGENERATE), {
+        result = await self.__recipe.get_querier().send_post_request(NormalisedURLPath(self.__recipe, '/recipe/session/regenerate'), {
             'accessToken': self.__access_token,
             'userDataInJWT': new_jwt_payload
         })

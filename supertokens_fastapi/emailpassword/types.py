@@ -117,7 +117,6 @@ class User:
         self.user_id = user_id
         self.email = email
         self.time_joined = time_joined
-        self.third_party_info = None
 
 
 class UsersResponse:

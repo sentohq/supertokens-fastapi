@@ -19,10 +19,6 @@ if TYPE_CHECKING:
     from .recipe import EmailVerificationRecipe
 from supertokens_fastapi.normalised_url_path import NormalisedURLPath
 from .types import User
-from .constants import (
-    RECIPE_USER_EMAIL_VERIFY,
-    RECIPE_USER_EMAIL_VERIFY_TOKEN
-)
 from .exceptions import (
     raise_email_already_verified_exception,
     raise_email_verification_invalid_token_exception
@@ -34,7 +30,7 @@ async def create_email_verification_token(recipe: EmailVerificationRecipe, user_
         'userId': user_id,
         'email': email
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_USER_EMAIL_VERIFY_TOKEN), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/user/email/verify/token'), data)
     if 'status' in response and response['status'] == 'OK':
         return response['token']
     raise_email_already_verified_exception(recipe,
@@ -47,7 +43,7 @@ async def verify_email_using_token(recipe: EmailVerificationRecipe, token: str) 
         'method': 'token',
         'token': token
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_USER_EMAIL_VERIFY), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/user/email/verify'), data)
     if 'status' in response and response['status'] == 'OK':
         return User(response['userId'], response['email'])
     raise_email_verification_invalid_token_exception(recipe, 'Failed to verify email as the the token has expired or is invalid')
@@ -58,5 +54,5 @@ async def is_email_verified(recipe: EmailVerificationRecipe, user_id: str, email
         'userId': user_id,
         'email': email
     }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USER_EMAIL_VERIFY), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/user/email/verify'), params)
     return response['isVerified']

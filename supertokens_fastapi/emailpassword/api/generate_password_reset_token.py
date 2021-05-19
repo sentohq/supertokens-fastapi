@@ -23,6 +23,7 @@ from supertokens_fastapi.emailpassword.exceptions import UnknownUserIdError
 from .utils import validate_form_fields_or_throw_error
 from supertokens_fastapi.emailpassword.constants import FORM_FIELD_EMAIL_ID
 from supertokens_fastapi.utils import find_first_occurrence_in_list
+from fastapi.background import BackgroundTasks
 
 
 async def handle_generate_password_reset_token_api(recipe: EmailPasswordRecipe, request: Request):
@@ -41,16 +42,20 @@ async def handle_generate_password_reset_token_api(recipe: EmailPasswordRecipe, 
         })
 
     try:
-        token = await recipe.create_reset_password_token(user.id)
+        token = await recipe.create_reset_password_token(user.user_id)
     except UnknownUserIdError:
         return JSONResponse({'status': 'OK'})
 
     password_reset_link = await recipe.config.reset_token_using_password_feature.get_reset_password_url(user) + '?token=' + token + '&rid=' + recipe.get_recipe_id()
-    try:
-        await recipe.config.reset_token_using_password_feature.create_and_send_custom_email(user, password_reset_link)
-    except Exception:
-        pass
+
+    async def send_email():
+        try:
+            await recipe.config.reset_token_using_password_feature.create_and_send_custom_email(user, password_reset_link)
+        except Exception:
+            pass
+    background_task = BackgroundTasks()
+    background_task.add_task(send_email)
 
     return JSONResponse({
         'status': 'OK'
-    })
+    }, background=background_task)

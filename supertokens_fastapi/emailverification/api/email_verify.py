@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse
 from supertokens_fastapi.exceptions import raise_general_exception, raise_bad_input_exception
 from supertokens_fastapi.session import verify_session
 from supertokens_fastapi.utils import normalise_http_method
+from fastapi.background import BackgroundTasks
 
 
 async def handle_email_verify_api(recipe: EmailVerificationRecipe, request: Request):
@@ -35,13 +36,16 @@ async def handle_email_verify_api(recipe: EmailVerificationRecipe, request: Requ
         token = body['token']
         user = await recipe.verify_email_using_token(token)
 
-        try:
-            recipe.config.handle_post_email_verification(user)
-        except Exception:
-            pass
-        response = {
+        async def send_email():
+            try:
+                recipe.config.handle_post_email_verification(user)
+            except Exception:
+                pass
+        background_task = BackgroundTasks()
+        background_task.add_task(send_email)
+        return JSONResponse({
             'status': 'OK'
-        }
+        }, background=background_task)
     else:
         session = await verify_session()(request)
         if session is None:
@@ -51,8 +55,7 @@ async def handle_email_verify_api(recipe: EmailVerificationRecipe, request: Requ
         email = await recipe.config.get_email_for_user_id(user_id)
 
         is_verified = await recipe.is_email_verified(user_id, email)
-        response = {
+        return JSONResponse({
             'status': 'OK',
             'isVerified': is_verified
-        }
-    return JSONResponse(response)
+        })

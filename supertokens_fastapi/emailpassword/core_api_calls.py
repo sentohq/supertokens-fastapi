@@ -16,15 +16,6 @@ under the License.
 from __future__ import annotations
 from supertokens_fastapi.normalised_url_path import NormalisedURLPath
 from .types import User, UsersResponse
-from .constants import (
-    RECIPE_SIGNUP,
-    RECIPE_SIGNIN,
-    RECIPE_USER,
-    RECIPE_USER_PASSWORD_RESET_TOKEN,
-    RECIPE_USER_PASSWORD_RESET,
-    RECIPE_USERS,
-    RECIPE_USERS_COUNT
-)
 from .exceptions import (
     raise_email_already_exists_exception,
     raise_wrong_credentials_exception,
@@ -41,7 +32,7 @@ async def sign_up(recipe: EmailPasswordRecipe, email: str, password: str) -> Use
         'password': password,
         'email': email
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SIGNUP), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/signup'), data)
     if 'status' in response and response['status'] == 'OK':
         return User(response['user']['id'], response['user']['email'], response['user']['timeJoined'])
     raise_email_already_exists_exception(recipe, 'Sign up failed because the email, ' + email + ', is already taken')
@@ -52,7 +43,7 @@ async def sign_in(recipe: EmailPasswordRecipe, email: str, password: str) -> Use
         'password': password,
         'email': email
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_SIGNIN), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/signin'), data)
     if 'status' in response and response['status'] == 'OK':
         return User(response['user']['id'], response['user']['email'], response['user']['timeJoined'])
     raise_wrong_credentials_exception(recipe, 'Sign in failed because of incorrect email & password combination')
@@ -62,7 +53,7 @@ async def get_user_by_id(recipe: EmailPasswordRecipe, user_id: str) -> Union[Use
     params = {
         'userId': user_id
     }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USER), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/user'), params)
     if 'status' in response and response['status'] == 'OK':
         return User(response['user']['id'], response['user']['email'], response['user']['timeJoined'])
     return None
@@ -72,7 +63,7 @@ async def get_user_by_email(recipe: EmailPasswordRecipe, email: str) -> Union[Us
     params = {
         'email': email
     }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USER), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/user'), params)
     if 'status' in response and response['status'] == 'OK':
         return User(response['user']['id'], response['user']['email'], response['user']['timeJoined'])
     return None
@@ -82,7 +73,7 @@ async def create_reset_password_token(recipe: EmailPasswordRecipe, user_id: str)
     data = {
         'userId': user_id
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_USER_PASSWORD_RESET_TOKEN),
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/user/password/reset/token'),
                                                             data)
     if 'status' in response and response['status'] == 'OK':
         return response['token']
@@ -95,7 +86,7 @@ async def reset_password_using_token(recipe: EmailPasswordRecipe, token: str, ne
         'token': token,
         'newPassword': new_password
     }
-    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, RECIPE_USER_PASSWORD_RESET), data)
+    response = await recipe.get_querier().send_post_request(NormalisedURLPath(recipe, '/recipe/user/password/reset'), data)
     if 'status' not in response or response['status'] != 'OK':
         raise_reset_password_invalid_token_exception(recipe,
                                                      'Failed to reset password as the the token has expired or is '
@@ -117,7 +108,7 @@ async def get_users(recipe: EmailPasswordRecipe, time_joined_order: Literal['ASC
             'paginationToken': pagination_token,
             **params
         }
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USERS), params)
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/users'), params)
     next_pagination_token = None
     if 'nextPaginationToken' in response:
         next_pagination_token = response['nextPaginationToken']
@@ -130,5 +121,5 @@ async def get_users(recipe: EmailPasswordRecipe, time_joined_order: Literal['ASC
 
 
 async def get_users_count(recipe: EmailPasswordRecipe) -> int:
-    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, RECIPE_USERS_COUNT))
+    response = await recipe.get_querier().send_get_request(NormalisedURLPath(recipe, '/recipe/users/count'))
     return int(response['count'])
