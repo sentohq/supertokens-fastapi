@@ -114,7 +114,7 @@ class EmailPasswordRecipe(RecipeModule):
 
     async def handle_error(self, request: Request, error: SuperTokensError):
         if isinstance(error, EmailAlreadyExistsError):
-            return self.handle_error(request,
+            return await self.handle_error(request,
                                      FieldError(self, 'Error in input formFields', [ErrorFormField('email', 'This '
                                                                                                             'email '
                                                                                                             'already '
