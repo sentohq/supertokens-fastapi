@@ -71,6 +71,7 @@ class FieldError(SuperTokensError):
                 'id': form_field.id,
                 'error': form_field.error
             })
+        return form_fields
 
 
 class WrongCredentialsError(SuperTokensError):
