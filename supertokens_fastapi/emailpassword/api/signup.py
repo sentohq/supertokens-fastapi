@@ -30,14 +30,14 @@ async def handle_sign_up_api(recipe: EmailPasswordRecipe, request: Request):
     body = await request.json()
     form_fields_raw = body['formFields'] if 'formFields' in body else []
     form_fields = await validate_form_fields_or_throw_error(recipe,
-                                                            recipe.config.sign_in_feature.form_fields,
+                                                            recipe.config.sign_up_feature.form_fields,
                                                             form_fields_raw)
     password = find_first_occurrence_in_list(lambda x: x.id == FORM_FIELD_PASSWORD_ID, form_fields).value
     email = find_first_occurrence_in_list(lambda x: x.id == FORM_FIELD_EMAIL_ID, form_fields).value
 
     user = await recipe.sign_up(email, password)
 
-    await recipe.config.sign_in_feature.handle_post_sign_up(user, get_filtered_list(
+    await recipe.config.sign_up_feature.handle_post_sign_up(user, get_filtered_list(
         lambda x: x.id != FORM_FIELD_EMAIL_ID and x.id != FORM_FIELD_PASSWORD_ID, form_fields))
 
     jwt_payload_promise = recipe.config.session_feature.set_jwt_payload(user, get_filtered_list(
@@ -53,7 +53,7 @@ async def handle_sign_up_api(recipe: EmailPasswordRecipe, request: Request):
     except Exception as e:
         raise_general_exception(recipe, e)
 
-    await create_new_session(request, user.id, jwt_payload, session_data)
+    await create_new_session(request, user.user_id, jwt_payload, session_data)
 
     return JSONResponse({
         'status': 'OK',
