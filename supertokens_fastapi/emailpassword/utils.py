@@ -333,7 +333,7 @@ def validate_and_normalise_user_input(recipe: EmailPasswordRecipe, app_info: App
     sign_up_feature = validate_and_normalise_sign_up_config(
         config['sign_up_feature'] if 'sign_up_feature' in config else None)
     sign_in_feature = validate_and_normalise_sign_in_config(sign_up_feature, config[
-        'sign_up_feature'] if 'sign_up_feature' in config else None)
+        'sign_in_feature'] if 'sign_in_feature' in config else None)
     sign_out_feature = validate_and_normalise_sign_out_config(
         config['sign_out_feature'] if 'sign_out_feature' in config else None)
     reset_token_using_password_feature = validate_and_normalise_reset_password_using_token_config(
