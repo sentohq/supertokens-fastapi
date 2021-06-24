@@ -139,7 +139,7 @@ def default_create_and_send_custom_email_verification(app_info: AppInfo) -> Call
             pass
     return func
 
-y
+
 class SessionFeature:
     def __init__(self, set_jwt_payload: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]],
                  set_session_data: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]]):
