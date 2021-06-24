@@ -29,9 +29,19 @@ def raise_email_verification_invalid_token_exception(recipe, msg):
     raise EmailVerificationInvalidTokenError(recipe, msg) from None
 
 
+def raise_unknown_user_id_exception(recipe, msg):
+    if isinstance(msg, SuperTokensError):
+        raise msg
+    raise UnknownUserIdError(recipe, msg) from None
+
+
 class EmailAlreadyVerifiedError(SuperTokensError):
     pass
 
 
 class EmailVerificationInvalidTokenError(SuperTokensError):
+    pass
+
+
+class UnknownUserIdError(SuperTokensError):
     pass

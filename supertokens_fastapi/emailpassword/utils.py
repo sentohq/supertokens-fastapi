@@ -117,6 +117,29 @@ def default_create_and_send_custom_email(app_info: AppInfo) -> Callable[[User, s
     return func
 
 
+async def default_handle_post_email_verification(_):
+    return {}
+
+
+def default_get_email_verification_url(app_info: AppInfo):
+    async def func(_: User):
+        return app_info.website_domain.get_as_string_dangerous() + app_info.website_base_path.get_as_string_dangerous() + '/verify-email'
+    return func
+
+
+def default_create_and_send_custom_email_verification(app_info: AppInfo) -> Callable[[User, str], Awaitable]:
+    async def func(user: User, email_verification_url: str):
+        if ('SUPERTOKENS_ENV' in environ) and (
+                environ['SUPERTOKENS_ENV'] != 'testing'):
+            return
+        try:
+            async with AsyncClient() as client:
+                response = await client.post('https://api.supertokens.io/0/st/auth/email/verify', json={'email': user.email, 'appName': app_info.app_name, 'emailVerifyURL': email_verification_url}, headers={'api-version': '0'})
+        except Exception:
+            pass
+    return func
+
+y
 class SessionFeature:
     def __init__(self, set_jwt_payload: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]],
                  set_session_data: Callable[[User, List[FormField], Literal['signin', 'signup']], Awaitable[any]]):
@@ -281,23 +304,20 @@ def email_verification_handle_post_email_verification(recipe: EmailPasswordRecip
     return func
 
 
-def validate_and_normalise_email_verification_config(recipe: EmailPasswordRecipe, config=None):
+def validate_and_normalise_email_verification_config(app_info: AppInfo, recipe: EmailPasswordRecipe, config=None):
     if config is None:
         return {
             'get_email_for_user_id': recipe.get_email_for_user_id
         }
-    create_and_send_custom_email = None
-    get_email_verification_url = None
-    handle_post_email_verification = None
-    if 'create_and_send_custom_email' in config:
-        create_and_send_custom_email = email_verification_create_and_send_custom_email(recipe, config[
-            'create_and_send_custom_email'])
-    if 'get_email_verification_url' in config:
-        get_email_verification_url = email_verification_get_email_verification_url(recipe,
-                                                                                   config['get_email_verification_url'])
-    if 'handle_post_email_verification' in config:
-        handle_post_email_verification = email_verification_handle_post_email_verification(recipe, config[
-            'handle_post_email_verification'])
+    create_and_send_custom_email = config[
+        'create_and_send_custom_email'] if 'create_and_send_custom_email' in config and config[
+        'create_and_send_custom_email'] is not None else default_create_and_send_custom_email_verification(
+        app_info)
+    get_email_verification_url = config[
+        'get_email_verification_url'] if 'get_email_verification_url' in config else default_get_email_verification_url(
+        app_info)
+    handle_post_email_verification = config[
+        'handle_post_email_verification'] if 'handle_post_email_verification' in config else default_handle_post_email_verification
 
     return {
         'disable_default_implementation': config[
@@ -341,6 +361,7 @@ def validate_and_normalise_user_input(recipe: EmailPasswordRecipe, app_info: App
         sign_up_feature,
         config['reset_password_using_token_feature'] if 'reset_password_using_token_feature' in config else None)
     email_verification_feature = validate_and_normalise_email_verification_config(
+        app_info,
         recipe,
         config['email_verification_feature'] if 'email_verification_feature' in config else None)
     return EmailPasswordConfig(session_feature, sign_up_feature, sign_in_feature, sign_out_feature,

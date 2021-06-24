@@ -1,6 +1,6 @@
 httpx~=0.15.5
 fastapi~=0.63.0
-starlette~=0.13.8
+starlette~=0.13.6
 PyJWT~=2.0.1
 PyYAML~=5.4.1
 requests~=2.25.1

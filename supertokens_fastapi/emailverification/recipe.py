@@ -38,7 +38,8 @@ from .constants import (
     USER_EMAIL_VERIFY_TOKEN
 )
 from .exceptions import (
-    EmailVerificationInvalidTokenError
+    EmailVerificationInvalidTokenError,
+    raise_unknown_user_id_exception
 )
 from fastapi.responses import JSONResponse
 
@@ -104,6 +105,12 @@ class EmailVerificationRecipe(RecipeModule):
         EmailVerificationRecipe.__instance = None
 
     # instance functions below...............
+
+    async def get_email_for_user_id(self, user_id: str) -> str:
+        user_info = await self.get_user_by_id(user_id)
+        if user_info is None:
+            raise_unknown_user_id_exception(self, 'Unknown User ID provided')
+        return user_info.email
 
     async def create_email_verification_token(self, user_id: str, email: str) -> str:
         return await core_create_email_verification_token(self, user_id, email)
