@@ -28,7 +28,8 @@ from fastapi.background import BackgroundTasks
 
 
 async def handle_generate_password_reset_token_api(recipe: EmailPasswordRecipe, request: Request):
-    body = json.loads(await request.json())
+    request_json = await request.json()
+    body = json.loads(request_json) if type(request_json) == str else request_json
     form_fields_raw = body['formFields'] if 'formFields' in body else []
     form_fields = await validate_form_fields_or_throw_error(recipe,
                                                             recipe.config.reset_token_using_password_feature.form_fields_for_generate_token_form,
