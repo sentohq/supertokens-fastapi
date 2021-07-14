@@ -13,8 +13,8 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-import json
 from __future__ import annotations
+import json
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from supertokens_fastapi.emailpassword.recipe import EmailPasswordRecipe
